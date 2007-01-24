@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 		while ((len = recvfrom(sock, buffer, sizeof(buffer), 
 		                       0, NULL, NULL)) >= 0)
 		{	
-			fwrite(buffer, len, 1, stdout);
+			write(STDOUT_FILENO, buffer, len);
 		}
 	}
 	else /* Assume MODE == SENDER */
