@@ -19,9 +19,9 @@ platform some of those features may not be available:
        +----------+----------+----------+----------+----------+
        | Win2k    |  L + S   |    S     |   None   |   None   |
        +----------+----------+----------+----------+----------+
-       | WinXP    |  L + S   |  L + S   |    S     |   None   |
+       | WinXP    |  L + S   |  L + S   |    S     |    S     |
        +----------+----------+----------+----------+----------+
-       | Win2k3   |  L + S   |  L + S   |    S     |   None   |
+       | Win2k3   |  L + S   |  L + S   |    S     |    S     |
        +----------+----------+----------+----------+----------+
        
 man doc/mnc.1 for information and help on how to run multicast.
