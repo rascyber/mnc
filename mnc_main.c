@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 		}
 		
 		/* Send the packets */
-		while((len = fread(buffer, sizeof(buffer), 1, stdin)) > 0)
+		while((len = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
 		{
 			sendto(sock, buffer, len, 0, config->group->ai_addr, 
 			       config->group->ai_addrlen);
