@@ -3,9 +3,10 @@
  *
  * mnc_opts.c -- Multicast NetCat
  *
- * Colm MacCarthaigh, <colm.maccarthaigh@heanet.ie>
+ * Colm MacCarthaigh, <colm@apache.org>
  *
- * Copyright (c) 2004, HEAnet Ltd. All rights reserved.
+ * Copyright (c) 2007, Colm MacCarthaigh.
+ * Copyright (c) 2004 - 2006, HEAnet Ltd. 
  *
  * This software is an open source.
  *

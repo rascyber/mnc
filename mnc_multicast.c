@@ -3,9 +3,10 @@
  *
  * mnc_multicast.c -- Multicast NetCat
  *
- * Colm MacCarthaigh, <colm.maccarthaigh@heanet.ie>
+ * Colm MacCarthaigh, <colm@apache.org>
  *
- * Copyright (c) 2004, HEAnet Ltd. All rights reserved.
+ * copyright (c) 2007, Colm MacCarthaigh.
+ * Copyright (c) 2004 - 2006, HEAnet Ltd. 
  *
  * This software is an open source.
  *
@@ -187,10 +188,10 @@ int mnc_join_ipv4_asm(int socket, struct addrinfo * group, char * iface)
 
 /* UNIX-specific functions */
 
-#define mnc_join_ipv6_asm(a, b, c) mnc_join_ip_asm((a), (b), (c))
-#define mnc_join_ipv6_ssm(a, b, c, d) mnc_join_ip_ssm((a), (b), (c), (d))
-#define mnc_join_ipv4_asm(a, b, c) mnc_join_ip_asm((a), (b), (c))
-#define mnc_join_ipv4_ssm(a, b, c, d) mnc_join_ip_ssm((a), (b), (c), (d))
+#define mnc_join_ipv6_asm(a, b, c)      mnc_join_ip_asm((a), (b), (c))
+#define mnc_join_ipv6_ssm(a, b, c, d)   mnc_join_ip_ssm((a), (b), (c), (d))
+#define mnc_join_ipv4_asm(a, b, c)      mnc_join_ip_asm((a), (b), (c))
+#define mnc_join_ipv4_ssm(a, b, c, d)   mnc_join_ip_ssm((a), (b), (c), (d))
 
 int mnc_join_ip_ssm(int socket, struct addrinfo * group, 
                       struct addrinfo * source,
