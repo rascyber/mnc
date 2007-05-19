@@ -65,7 +65,7 @@ void mnc_warning(char * string, ...)
 	}
 
 	/* End the vararg stuff */
-	va_end(string);
+	va_end(ap);
 }
 	
 void mnc_error(char * string, ...)
@@ -88,7 +88,7 @@ void mnc_error(char * string, ...)
 	}
 
 	/* End the vararg stuff */
-	va_end(string);
+	va_end(ap);
 
 	/* Die! */
 	exit(1);
