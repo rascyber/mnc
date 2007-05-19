@@ -271,6 +271,7 @@ int mnc_join_ip_ssm(int socket, struct addrinfo * group,
 int multicast_setup_listen(int socket, struct addrinfo * group, 
                             struct addrinfo * source, char * iface)
 {
+        size_t rcvbuf;
 
 #ifndef WINDOWS
 	/* bind to the group address before anything */
@@ -310,8 +311,14 @@ int multicast_setup_listen(int socket, struct addrinfo * group,
                         return -1;
                 }
         }
-
 #endif
+
+        /* Set a receive buffer size of 64k */
+        rcvbuf = 1 << 15;
+        if (setsockopt(socket, SOL_SOCKET, SO_RCVBUF, &rcvbuf, 
+                       sizeof(rcvbuf)) < 0) {
+                mnc_warning("Could not set receive buffer to 64k\n");
+        }
 
 	if (source != NULL)
 	{
