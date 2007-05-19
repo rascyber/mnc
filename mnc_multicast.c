@@ -61,29 +61,13 @@
 
 #include "mnc.h"
 
-#ifdef WINDOWS
+#ifndef MCAST_JOIN_GROUP
 
-int mnc_join_ipv6_ssm(int socket, struct addrinfo * group, 
-                      struct addrinfo * source, char * iface)
-{
-	mnc_warning("Sorry, No support for IPv6 in Windows\n");
-	
-	return -1;
-}
-
-int mnc_join_ipv6_asm(int socket, struct addrinfo * group, char * iface)
-{
-	mnc_warning("Sorry, No support for IPv6 in Windows\n");
-	
-	return -1;
-}
-
+#ifdef IP_ADD_SOURCE_MEMBERSHIP
 int mnc_join_ipv4_ssm(int socket, struct addrinfo * group, 
                       struct addrinfo * source, char * iface)
 {
 	struct	ip_mreq_source	multicast_request;
-	struct 	sockaddr_in	iface_addr;
-	
 
 	if (iface != NULL)
 	{
@@ -100,20 +84,6 @@ int mnc_join_ipv4_ssm(int socket, struct addrinfo * group,
 		/* set the interface to the default */
 		multicast_request.imr_interface.s_addr = htonl(INADDR_ANY);
 	}
-
-	/* bind to the address before anything */
-	iface_addr.sin_family = AF_INET;
-	iface_addr.sin_port = ((struct sockaddr_in *)group->ai_addr)->sin_port;
-	iface_addr.sin_addr.s_addr = multicast_request.imr_interface.s_addr;
-	
-	if (bind(socket, (struct sockaddr *) &iface_addr, sizeof(iface_addr)) 
-	    != 0)
-	{
-		mnc_warning("Could not bind to group-id\n");
-		exit(1);
-		return -1;
-	}
-
 
 	multicast_request.imr_multiaddr.s_addr = 
 	                ((struct sockaddr_in *)group->ai_addr)->sin_addr.s_addr;
@@ -134,11 +104,77 @@ int mnc_join_ipv4_ssm(int socket, struct addrinfo * group,
 	
 	return 0;
 }
+#else
 
+int mnc_join_ipv4_ssm(int socket, struct addrinfo * group, 
+                      struct addrinfo * source, char * iface)
+{
+	mnc_warning("Sorry, No support for IPv4 source-specific multicast in this build\n");
+	
+	return -1;
+}
+#endif
+
+int mnc_join_ipv6_ssm(int socket, struct addrinfo * group, 
+                      struct addrinfo * source, char * iface)
+{
+	mnc_warning("Sorry, No support for IPv6 source-specific multicast in this build\n");
+	
+	return -1;
+}
+#else /* if MCAST_JOIN_GROUP  .. */
+
+#define mnc_join_ipv6_asm(a, b, c)      mnc_join_ip_asm((a), (b), (c))
+#define mnc_join_ipv4_asm(a, b, c)      mnc_join_ip_asm((a), (b), (c))
+
+int mnc_join_ip_asm(int socket, struct addrinfo * group, char * iface)
+{
+	struct	group_req	multicast_request;
+	int			ip_proto;
+
+	if (group->ai_family == AF_INET6)
+	{
+		ip_proto = IPPROTO_IPV6;
+	}
+	else
+	{
+		ip_proto = IPPROTO_IP;
+	}
+	
+	if (iface != NULL)
+	{
+		if ((multicast_request.gr_interface = if_nametoindex(iface)) 
+		    == 0)
+		{
+			mnc_warning("Ignoring unknown interface: %s\n", iface);
+		}
+	}
+	else
+	{
+		multicast_request.gr_interface = 0;
+	}		
+			
+	memcpy(&multicast_request.gr_group, group->ai_addr, group->ai_addrlen);
+
+	/* Set the socket option */
+	if (setsockopt(socket, ip_proto, MCAST_JOIN_GROUP, (char *)
+	               &multicast_request, sizeof(multicast_request)) != 0)
+	{
+		mnc_warning("Could not join the multicast group: %s\n", 
+		            strerror(errno));
+
+		return -1;
+	}
+	
+	return 0;
+}
+
+#endif /* MCAST_JOIN_GROUP */
+
+#ifndef MCAST_JOIN_SOURCE_GROUP
 int mnc_join_ipv4_asm(int socket, struct addrinfo * group, char * iface)
 {
 	struct	ip_mreq		multicast_request;
-	struct 	sockaddr_in	iface_addr;
 	
 	if (iface != NULL)
 	{
@@ -156,18 +192,6 @@ int mnc_join_ipv4_asm(int socket, struct addrinfo * group, char * iface)
 		multicast_request.imr_interface.s_addr = htonl(INADDR_ANY);
 	}
 
-	/* bind to the interface address before anything */
-	iface_addr.sin_family = AF_INET;
-	iface_addr.sin_port = ((struct sockaddr_in *)group->ai_addr)->sin_port;
-	iface_addr.sin_addr.s_addr = multicast_request.imr_interface.s_addr;
-
-	if (bind(socket, (struct sockaddr *) &iface_addr, sizeof(iface_addr)) 
-	    != 0)
-	{
-		mnc_warning("Could not bind to group-id\n");
-		return -1;
-	}
-
 	multicast_request.imr_multiaddr.s_addr = 
 	                ((struct sockaddr_in *)group->ai_addr)->sin_addr.s_addr;
 
@@ -176,22 +200,25 @@ int mnc_join_ipv4_asm(int socket, struct addrinfo * group, char * iface)
 	               (char *) &multicast_request, 
 	               sizeof(multicast_request)) != 0)
 	{
-		mnc_warning("Could not join the multicast group: %s %d\n", 
-		            strerror(errno), WSAGetLastError());
+		mnc_warning("Could not join the multicast group: %s\n", 
+		            strerror(errno));
 
 		return -1;
 	}
 	
 	return 0;
 }
-#else
 
-/* UNIX-specific functions */
+int mnc_join_ipv6_asm(int socket, struct addrinfo * group, char * iface)
+{
+	mnc_warning("Sorry, No support for IPv6 any-source multicast in this build\n");
+	
+	return -1;
+}
+#else /* if MCAST_JOIN_SOURCE_GROUP ... */
 
-#define mnc_join_ipv6_asm(a, b, c)      mnc_join_ip_asm((a), (b), (c))
-#define mnc_join_ipv6_ssm(a, b, c, d)   mnc_join_ip_ssm((a), (b), (c), (d))
-#define mnc_join_ipv4_asm(a, b, c)      mnc_join_ip_asm((a), (b), (c))
 #define mnc_join_ipv4_ssm(a, b, c, d)   mnc_join_ip_ssm((a), (b), (c), (d))
+#define mnc_join_ipv6_ssm(a, b, c, d)   mnc_join_ip_ssm((a), (b), (c), (d))
 
 int mnc_join_ip_ssm(int socket, struct addrinfo * group, 
                       struct addrinfo * source,
@@ -239,50 +266,7 @@ int mnc_join_ip_ssm(int socket, struct addrinfo * group,
 	
 	return 0;
 }
-
-int mnc_join_ip_asm(int socket, struct addrinfo * group, char * iface)
-{
-	struct	group_req	multicast_request;
-	int			ip_proto;
-
-	if (group->ai_family == AF_INET6)
-	{
-		ip_proto = IPPROTO_IPV6;
-	}
-	else
-	{
-		ip_proto = IPPROTO_IP;
-	}
-	
-	if (iface != NULL)
-	{
-		if ((multicast_request.gr_interface = if_nametoindex(iface)) 
-		    == 0)
-		{
-			mnc_warning("Ignoring unknown interface: %s\n", iface);
-		}
-	}
-	else
-	{
-		multicast_request.gr_interface = 0;
-	}		
-			
-	memcpy(&multicast_request.gr_group, group->ai_addr, group->ai_addrlen);
-
-	/* Set the socket option */
-	if (setsockopt(socket, ip_proto, MCAST_JOIN_GROUP, (char *)
-	               &multicast_request, sizeof(multicast_request)) != 0)
-	{
-		mnc_warning("Could not join the multicast group: %s\n", 
-		            strerror(errno));
-
-		return -1;
-	}
-	
-	return 0;
-}
-
-#endif
+#endif /* MCAST_JOIN_SOURCE_GROUP */
 
 int multicast_setup_listen(int socket, struct addrinfo * group, 
                             struct addrinfo * source, char * iface)
@@ -295,6 +279,38 @@ int multicast_setup_listen(int socket, struct addrinfo * group,
 		mnc_warning("Could not bind to group-id\n");
 		return -1;
 	}
+#else 
+        if (group->ai_family == AF_INET)
+        {
+                struct sockaddr_in sin;
+
+                sin.sin_family = group->ai_family;
+                sin.sin_port = group->ai_port;
+                sin.sin_addr = INADDR_ANY;
+
+                if (bind(socket, (struct sockaddr *) sin, 
+                         sizeof(sin)) != 0)
+                {
+                        mnc_warning("Could not bind to ::\n");
+                        return -1;
+                }
+        }
+        else if (group->ai_family == AF_INET6)
+        {
+                struct sockaddr_in6 sin6;
+
+                sin6.sin6_family = group->ai_family;
+                sin6.sin6_port = group->ai_port;
+                sin6.sin6_addr = in6addr_any;
+
+                if (bind(socket, (struct sockaddr *) sin6, 
+                         sizeof(sin6)) != 0)
+                {
+                        mnc_warning("Could not bind to ::\n");
+                        return -1;
+                }
+        }
+
 #endif
 
 	if (source != NULL)
