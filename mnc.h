@@ -58,34 +58,6 @@
 /* The UDP port MNC will use by default */
 #define MNC_DEFAULT_PORT    	"1234"
 
-#ifdef LINUX
-
-struct group_source_req {
-        uint32_t                gsr_interface;  /* interface index */
-        struct sockaddr_storage gsr_group;      /* group address */
-        struct sockaddr_storage gsr_source;     /* source address */
-};
-
-struct group_req
-{
-        uint32_t                gr_interface;   /* interface index */
-        struct sockaddr_storage gr_group;       /* group address */
-};
-
-struct ip_mreq_source {
-	struct  in_addr imr_multiaddr;  /* IP multicast address of group */
-	struct  in_addr imr_sourceaddr; /* source address of group */
-	struct  in_addr imr_interface;  /* local IP address of interface */
-};
-
-#define MCAST_JOIN_GROUP                42
-#define MCAST_JOIN_SOURCE_GROUP         46
-
-#define IP_ADD_SOURCE_MEMBERSHIP        39
-#define IP_DROP_SOURCE_MEMBERSHIP       40
-
-#endif /* LINUX */
-
 struct mnc_configuration
 {
 	/* Are we sending or recieving ? */
